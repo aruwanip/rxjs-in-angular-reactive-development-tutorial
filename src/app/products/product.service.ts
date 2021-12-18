@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
+import { combineLatest, Observable, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 
+import { ProductCategoryService } from '../product-categories/product-category.service';
 import { Supplier } from '../suppliers/supplier';
 import { SupplierService } from '../suppliers/supplier.service';
 import { Product } from './product';
@@ -16,17 +17,27 @@ export class ProductService {
 
   products$ = this.http.get<Product[]>(this.productsUrl)
     .pipe(
-      map(products => products.map(product => ({
-        ...product,
-        price: product.price * 1.5,
-        searchKey: [product.productName]
-      }) as Product)),
       tap(data => console.log('Products: ', JSON.stringify(data))),
       catchError(this.handleError)
     );
 
+  productsWithCategory$ = combineLatest([
+    this.products$,
+    this.productCategoryService.productCategories$
+  ]).pipe(
+    map(([products, categories]) =>
+      products.map(product => ({
+        ...product,
+        price: product.price * 1.5,
+        category: categories.find(c => product.categoryId === c.id).name,
+        searchKey: [product.productName]
+      }) as Product)
+    ));
+
   constructor(private http: HttpClient,
-              private supplierService: SupplierService) { }
+              private productCategoryService: ProductCategoryService,
+              private supplierService: SupplierService) {
+  }
 
   private fakeProduct(): Product {
     return {
@@ -47,11 +58,11 @@ export class ProductService {
     let errorMessage: string;
     if (err.error instanceof ErrorEvent) {
       // A client-side or network error occurred. Handle it accordingly.
-      errorMessage = `An error occurred: ${err.error.message}`;
+      errorMessage = `An error occurred: ${ err.error.message }`;
     } else {
       // The backend returned an unsuccessful response code.
       // The response body may contain clues as to what went wrong,
-      errorMessage = `Backend returned code ${err.status}: ${err.body.error}`;
+      errorMessage = `Backend returned code ${ err.status }: ${ err.body.error }`;
     }
     console.error(err);
     return throwError(errorMessage);

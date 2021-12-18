@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-
 import { throwError, Observable } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 
 import { ProductCategory } from './product-category';
 
@@ -11,7 +11,14 @@ import { ProductCategory } from './product-category';
 export class ProductCategoryService {
   private productCategoriesUrl = 'api/productCategories';
 
-  constructor(private http: HttpClient) { }
+  productCategories$ = this.http.get<ProductCategory[]>(this.productCategoriesUrl)
+    .pipe(
+      tap(data => console.log('categories', JSON.stringify(data))),
+      catchError(this.handleError)
+    );
+
+  constructor(private http: HttpClient) {
+  }
 
   private handleError(err: any): Observable<never> {
     // in a real world app, we may send the server to some remote logging infrastructure
@@ -19,11 +26,11 @@ export class ProductCategoryService {
     let errorMessage: string;
     if (err.error instanceof ErrorEvent) {
       // A client-side or network error occurred. Handle it accordingly.
-      errorMessage = `An error occurred: ${err.error.message}`;
+      errorMessage = `An error occurred: ${ err.error.message }`;
     } else {
       // The backend returned an unsuccessful response code.
       // The response body may contain clues as to what went wrong,
-      errorMessage = `Backend returned code ${err.status}: ${err.body.error}`;
+      errorMessage = `Backend returned code ${ err.status }: ${ err.body.error }`;
     }
     console.error(err);
     return throwError(errorMessage);
