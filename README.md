@@ -1,4 +1,4 @@
-# RXJS in Angular: Reactive Development (Pluralsight Course)
+# RxJS in Angular: Reactive Development (Pluralsight Course)
 
 Code from a Pluralsight course on reactive development with RxJS in Angular.
 Topics covered include:
